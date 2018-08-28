@@ -9,15 +9,15 @@ import csv
 import ConfigParser
 import os
 
-def CreateGroup(email):
+def CreateGroup(first_name,last_name,email,position):
     json_data = {
                     "name": email,
                     "targets": [
                       {
-                        "first_name": "",
-                        "last_name": "",
+                        "first_name": first_name,
+                        "last_name": last_name,
                         "email": email,
-                        "position": ""
+                        "position": position
                       }
                     ]
                 }
@@ -26,7 +26,8 @@ def CreateGroup(email):
     try:
         print("Creating group: " + email)
         res = requests.post(admin_url + "/api/groups/?api_key=" + api_key, data=json_payload)
-    except requests.exceptions.RequestException:
+    except requests.exceptions.RequestException as e:
+	print (str(e))
         print "some HTTP exception, please repeat"
 
 
@@ -39,7 +40,7 @@ def CreateMailTemplate(attachement_filepath):
     json_data = {
                     "name": attachement_filepath,
                     "subject": subject,
-                    "text": "",
+                    "text": txt_body,
                     "html": html_body,
                     "attachments": [
                         {
@@ -72,9 +73,9 @@ def CreateMailTemplate(attachement_filepath):
         print "some HTTP exception, please repeat"
 
 
-def CreateCampaign(email, attachement_filepath):
+def CreateCampaign(first_name,last_name,email,position,attachement_filepath,url):
 
-    CreateGroup(email)
+    CreateGroup(first_name,last_name,email,position)
     CreateMailTemplate(attachement_filepath)
     json_data = {
                     "name": email,
@@ -82,12 +83,12 @@ def CreateCampaign(email, attachement_filepath):
                       "name": attachement_filepath,
                     },
                     "page": {
-                      "name": "ya"
+                      "name": landing_page
                     },
                     "smtp": {
                       "name": sending_profile
                     },
-                    "url": "",
+                    "url": url,
                     "groups": [
                       {
                         "name": email,
@@ -102,6 +103,7 @@ def CreateCampaign(email, attachement_filepath):
     try:
         print("Creating campaign: " + email)
         res = requests.post(admin_url + "/api/campaigns/?api_key=" + api_key, data=json_payload)
+        print(json_payload)	
     except requests.exceptions.RequestException:
         print "some HTTP exception, please repeat"
 
@@ -169,14 +171,17 @@ config = ConfigParser.RawConfigParser()
 config.read('projector.cfg')
 admin_url = config.get('DEFAULT',"admin_url")
 api_key = config.get('DEFAULT',"key")
-pairs_file = config.get('DEFAULT',"pairs_file")
+users_file = config.get('DEFAULT',"users_file")
 html_file = config.get('DEFAULT',"html_file")
+txt_file = config.get('DEFAULT',"txt_file")
 images_list = json.loads(config.get('DEFAULT','images'))
 sending_profile = config.get('DEFAULT','sending_profile')
 launch_date = config.get('DEFAULT','launch_date')
 attachement_dir = config.get('DEFAULT','attachement_dir')
 subject = config.get('DEFAULT','subject')
 attachement_filename = config.get('DEFAULT','attachement_filename')
+landing_url = config.get('DEFAULT','landing_url')
+landing_page = config.get('DEFAULT','landing_page')
 
 if  flag_delete_all:
     DeleteAll()
@@ -185,13 +190,10 @@ if  flag_delete_all:
 with open(html_file,"rb") as f:
     html_body = f.read()
 
-with open(pairs_file,"rb") as csvfile:
-    pairs = csv.reader(csvfile)
-    for pair in pairs:
-        CreateCampaign(pair[0],pair[1])
-
-
-
-
-
-
+with open(txt_file,"rb") as f2:
+    txt_body = f2.read()
+	
+with open(users_file,"rb") as csvfile:
+    users = csv.reader(csvfile)
+    for user in users:
+        CreateCampaign(user[0],user[1],user[2],user[3],user[4],landing_url)

@@ -8,6 +8,7 @@ import base64
 import csv
 import ConfigParser
 import os
+import time
 
 def CreateGroup(first_name,last_name,email,position):
     json_data = {
@@ -103,7 +104,7 @@ def CreateCampaign(first_name,last_name,email,position,attachement_filepath,url)
     try:
         print("Creating campaign: " + email)
         res = requests.post(admin_url + "/api/campaigns/?api_key=" + api_key, data=json_payload)
-        print(json_payload)	
+        time.sleep(delay)
     except requests.exceptions.RequestException:
         print "some HTTP exception, please repeat"
 
@@ -179,9 +180,10 @@ sending_profile = config.get('DEFAULT','sending_profile')
 launch_date = config.get('DEFAULT','launch_date')
 attachement_dir = config.get('DEFAULT','attachement_dir')
 subject = config.get('DEFAULT','subject')
-attachement_filename = config.get('DEFAULT','attachement_filename')
+attachement_filename = config.get('DEFAULT','attachment_filename')
 landing_url = config.get('DEFAULT','landing_url')
 landing_page = config.get('DEFAULT','landing_page')
+delay = int(config.get('DEFAULT','delay'))
 
 if  flag_delete_all:
     DeleteAll()
